@@ -1,0 +1,620 @@
+--Xiao Qin 5/5/2025
+
+--function > math > comparison > logical
+--precedence
+
+--globals
+global matArray = #() --temporary array to hold ALL materials
+global matArrayUni = #()
+global mapArray = #() --temporary array to hold ALL texturemaps
+global nf --newRolloutFloater
+global mapBrowser --createDialog
+global matSetting --createDialog
+global mapChecker --createDialog
+global roSize --createDialog
+global co --createDialog
+
+global matIDArray = #() --original mat id array
+global matIDArrayDup = #() --any duplicated mat id goes here
+global matFlag = false --is there any duplicated IDs from different materials
+--globals
+
+
+--btn13 related
+global mapBitmapArr = #() --map array
+global mapBitmapMissArr = #()
+global mapTexmapMissArr = #()
+
+global mapBitmapArrUni = #() --map array unique
+global mapBitmapMissArrUni = #()
+global mapTexmapMissArrUni = #()
+
+global mapBitmapArrUni_str = #() --map array unique string
+global mapBitmapMissArrUni_str = #()
+global mapTexmapMissArrUni_str = #()
+
+global mapBitmapArrUni_cnt = #() --map array unique count
+global mapBitmapMissArrUni_cnt = #()
+global mapTexmapMissArrUni_cnt = #()
+
+global mapMatchArr = #() --after search keywords
+global mapMatchArr_str = #()
+global mapMatchArr_cnt = #()
+
+global matBoxArray = #() --materials dependent on mapArray
+--btn13 related
+
+
+--functions
+fn resetGlobals =
+(
+	matArray = #()
+	mapArray = #()
+	
+	--btn13 related
+	mapBitmapArr = #() --map array
+	mapBitmapMissArr = #()
+	mapTexmapMissArr = #()
+
+	mapBitmapArrUni = #() --map array unique
+	mapBitmapMissArrUni = #()
+	mapTexmapMissArrUni = #()
+
+	mapBitmapArrUni_str = #() --map array unique string
+	mapBitmapMissArrUni_str = #()
+	mapTexmapMissArrUni_str = #()
+
+	mapBitmapArrUni_cnt = #() --map array unique count
+	mapBitmapMissArrUni_cnt = #()
+	mapTexmapMissArrUni_cnt = #()
+	
+	mapMatchArr = #() --after search keywords
+	mapMatchArr_str = #()
+	mapMatchArr_cnt = #()
+
+	matBoxArray = #() --materials dependent on mapArray
+	--btn13 related
+)
+
+fn checkMatID obj =
+(
+	if matIDArray[obj.effectsChannel] == undefined then
+	(
+		matIDArray[obj.effectsChannel] = obj
+	)
+	else if matIDArray[obj.effectsChannel] == obj then
+	(
+		--material self/instance already in there; do nothing
+	)
+	else
+	(
+		matFlag = true
+		append matIDArrayDup obj
+	)
+)
+
+--get single material or texturemap from material or multimaterial
+--typically for i in sceneMaterials do
+fn getMatRecursive mat =
+(
+	if mat != undefined then --undefined proof
+	(
+		if superClassOf mat == material then
+		(
+			local count = getNumSubMtls mat
+		
+			if count > 0 then
+			(
+				for i = 1 to count do
+				(
+					local submat = getSubMtl mat i
+					
+					if submat != undefined then --could be 10 undefined for Multimaterial
+					(
+						getMatRecursive submat
+					)
+				)
+			)
+			else --count == 0 means mat is not Multimaterial or VRayBlendMtl
+			(
+				append matArray mat
+			)
+		)
+		else if superClassOf mat == textureMap then
+		(
+			append matArray mat
+		)
+	)
+)
+
+--get bitmap or bitmapmissing or missingtex from material
+--typically for i in matarray do
+--work on both single material and single/comp textureap
+--not work on multimaterial
+fn getMapRecursive mat =
+(
+	if mat != undefined then --undefined proof
+	(
+		local count = getNumSubTexmaps mat
+	
+		if count > 0 then --single material or comp texturemap
+		(
+			for i = 1 to count do
+			(
+				local submap = getSubTexmap mat i
+				
+				if submap != undefined then --could be 24 undefined and 20 undefined for Standard and VRayMtl
+				(
+					--a
+					if classOf submap == bitmapTexture then
+					(
+						--all bitmap
+						append mapBitmapArr submap
+						
+						--only missing filename
+						if not(doesFileExist submap.fileName) do
+						(
+							append mapBitmapMissArr submap
+						)
+					)
+					--b
+					else if classOf submap == Missing_TextureMap then
+					(
+						append mapBitmapArr submap
+						append mapTexmapMissArr submap
+					)
+					--c
+					else
+					(
+						getMapRecursive submap
+					)
+				)
+			)
+		)
+		else --count == 0 means mat is not material but textureMap
+		(
+			local submap = mat
+			
+			--a
+			if classOf submap == bitmapTexture then
+			(
+				--all bitmap
+				append mapBitmapArr submap
+				
+				--only missing filename
+				if not(doesFileExist submap.fileName) do
+				(
+					append mapBitmapMissArr submap
+				)
+			)
+			--b
+			else if classOf submap == Missing_TextureMap then
+			(
+				append mapBitmapArr submap
+				append mapTexmapMissArr submap
+			)
+		)
+	)
+)
+
+
+
+--counter 1
+fn countStart =
+(
+	try(DestroyDialog co) catch()
+	
+	rollout co "counter"
+	(
+		label lb "n/a"
+	)
+	
+	createDialog co pos:[200,140]
+)
+
+--counter 2
+fn countUpdate txt cnt =
+(
+	co.lb.text = txt + cnt as string
+)
+
+--counter 3
+fn countEnd =
+(
+	try(DestroyDialog co) catch()
+)
+
+
+
+fn getMatRecursiveScene =
+(
+	countStart()
+
+	--sceneMaterials
+	--important to update
+	UpdateSceneMaterialLib()
+
+	local smCnt = sceneMaterials.count
+	for i = 1 to smCnt do
+	(
+		getMatRecursive sceneMaterials[i]
+		countUpdate "mat: " i
+	)
+)
+
+--format the string versionf of mapArray
+fn getArrayString mArr =
+(
+	local ret = #()
+	
+	if mArr.count > 0 then
+	(
+		for i = 1 to mArr.count do
+		(
+			if classOf mArr[i] == Missing_TextureMap then
+			(
+				ret[i] = mArr[i].name + ": Missing_TextureMap"
+			)
+			else if classOf mArr[i] == bitmapTexture then
+			(
+				if mArr[i].fileName.count < 66 then
+				(
+					ret[i] = mArr[i].name + ": " + mArr[i].fileName
+				)
+				else --from 66 up
+				(
+					ret[i] = mArr[i].name + ": " + (substring mArr[i].fileName 1 33) + " ... " +
+										(substring mArr[i].fileName (mArr[i].fileName.count-32) -1) --"-1" means to the end
+				)
+			)
+			else
+			(
+				ret[i] = "unknown"
+			)
+		)
+	)
+	
+	--no need to write "return"; and it's slow
+	--Do not use return, break, exit or continue
+	--https://help.autodesk.com/view/MAXDEV/2023/ENU/?guid=GUID-DEFAF4D3-ADE9-469E-963A-440996D64BE1
+	ret
+)
+
+--unique array count
+fn getUniqueArrayCount arrUni arr =
+(
+	local ret = #()
+	
+	for i = 1 to arrUni.count do
+	(
+		local tmpArray = for j in arr where j == arrUni[i] collect j
+		ret[i] = tmpArray.count
+	)
+	
+	ret
+)
+
+fn isCorona arg =
+(
+	local ret = false
+	
+	ret = matchPattern arg pattern:"*Corona*"
+	
+	ret
+)
+
+fn isVRay arg =
+(
+	local ret = false
+	
+	ret = (matchPattern arg pattern:"*VRay*") or (matchPattern arg pattern:"*V_Ray*")
+	
+	ret
+)
+
+fn joinArrayString arr1 arr2 =
+(
+	local ret = #()
+	
+	for i = 1 to arr1.count do
+	(
+		ret[i] = "(" + (arr1[i] as string) + ") " + (arr2[i] as string)
+	)
+	
+	ret
+)
+
+fn roundTo v n =
+(
+	mult = 10.0^n
+	(floor(v * mult + 0.5)) / mult
+)
+
+fn CrSetting =
+(
+	if not isCorona(renderers.current as string) then
+	(
+		renderers.current = Corona()
+	)
+	cr = renderers.current
+	
+	--pass
+	cr.progressive_passLimit = 80
+	cr.progressive_timeLimit = 3600000
+	cr.adaptivity_targetError = 6.0
+	
+	--dr
+	cr.dr_enable = true
+	cr.dr_slaveEnabled = #(true, true, true, true)
+	cr.dr_slaveAddresses = #("boxxrender14", "boxxrender22", "boxxrender23", "boxxrender24")
+	
+	--tonemapping
+	cr.colorMap_pipeline = ReinhardOperatorPlugin()
+	cr.colorMap_pipeline.colorMappingOperator_highlightCompression = 1.5
+	cr.colorMap_pipeline.colorMappingOperator_nextOperator = PhotographicExposureOperatorPlugin()
+)
+
+fn VRaySetting a:1500 b1:1 b2:2 c:1.0 d:1 e1:50 e2:20 f:300 g:" " =
+(
+	renderSceneDialog.close()
+	if not isVRay(renderers.current as string) then
+	(
+		renderers.current = V_Ray_Next__update_3_1()
+	)
+	vr = renderers.current
+	
+	/*
+	rendLockImageAspectRatio = false
+	ar = rendImageAspectRatio
+	renderWidth = a
+	renderHeight = int(a/ar)
+	*/
+	
+	vr.output_separateFolders = false
+	vr.output_expandFrameNumber = false
+	vr.output_splitAlpha = false
+	
+	vr.options_displacement = false
+	vr.options_hiddenLights = true
+	vr.options_defaultLights = 0
+	vr.options_probabilisticLights = 0
+	
+	vr.imageSampler_type = 1
+	vr.filter_on = false
+	vr.twoLevel_baseSubdivs = b1
+	vr.twoLevel_fineSubdivs = b2
+	vr.dmc_useLocalSubdivs = true
+	vr.dmc_subdivs_mult = c
+	
+	vr.colorMapping_type = 1
+	vr.colorMapping_clampOutput = true
+	vr.colorMapping_clampLevel = 1.0
+	vr.colorMapping_adaptationOnly = 2
+	
+	vr.gi_primary_type = 0
+	vr.gi_irradmap_preset = d
+	vr.gi_irradmap_subdivs = e1
+	vr.gi_irradmap_interpSamples = e2
+	
+	vr.gi_secondary_type = 3
+	vr.lightcache_subdivs = f
+	vr.lightcache_sampleSize = 0.01
+	
+	vr.system_distributedRender = true
+	vr.system_vrayLog_show = 0
+	
+	--renderSceneDialog.open()
+	MessageBox ("Render setting " + g)
+)
+
+--work on single material
+--filter VRayMtl
+fn VRayMatSetting i cpDiff:(color 128 128 128) cpRefl:(color 128 128 128) spReflGlos:0.6 spReflDep:5 spReflSub:8 spReflIOR:1.6 cbReflIOR:true cbReflLock:true \
+cpRefr:(color 0 0 0) spRefrGlos:1.0 spRefrDep:5 spRefrSub:8 spRefrIOR:1.6 \
+spDiff:100 spRefl:100 spRefr:100 spOpac:100 spBump:30 \
+cpDiffX:false cpReflX:false spReflGlosX:false spReflDepX:false spReflSubX:false spReflIORX:false cbReflIORX:false cbReflLockX:false \
+cpRefrX:false spRefrGlosX:false spRefrDepX:false spRefrSubX:false spRefrIORX:false \
+spDiffX:false spReflX:false spRefrX:false spOpacX:false spBumpX:false =
+(
+	if classOf i == VRayMtl do
+	(
+		if i.texmap_diffuse != undefined then
+		(
+			if isProperty i.texmap_diffuse "coords" then i.texmap_diffuse.coords.blur = 0.01
+			if isProperty i.texmap_diffuse "filtering" then i.texmap_diffuse.filtering = 0
+		)
+		if not cpDiffX then i.diffuse = cpDiff
+		if not spDiffX then i.texmap_diffuse_multiplier = spDiff
+		
+		i.brdf_type = 4 --microfacet gtr
+		i.anisotropy = 0.0
+		
+		i.option_traceReflection = true
+		i.option_traceRefraction = true
+		i.option_cutOff = 0.001
+		i.option_glossyFresnel = true
+		i.refraction_fogUnitsScale_on = true
+		
+		i.texmap_translucent = undefined
+		i.translucency_on = 0 --false
+		
+		if i.texmap_reflection != undefined then
+		(
+			if isProperty i.texmap_reflection "coords" then i.texmap_reflection.coords.blur = 0.2
+			if isProperty i.texmap_reflection "filtering" then i.texmap_reflection.filtering = 0
+		)
+		if not cpReflX then i.reflection = cpRefl
+		if not spReflX then i.texmap_reflection_multiplier = spRefl
+		i.texmap_reflectionGlossiness_multiplier = 100
+		
+		if not spReflDepX then i.reflection_maxDepth = spReflDep
+		if not spReflSubX then i.reflection_subdivs = spReflSub
+		if not spReflGlosX then i.reflection_glossiness = spReflGlos
+		if not cbReflIORX then i.reflection_fresnel = cbReflIOR
+		if not cbReflLockX then i.reflection_lockIOR = cbReflLock
+		if not spReflIORX then i.reflection_ior = spReflIOR
+		
+		if not cpRefrX then i.refraction = cpRefr
+		if not spRefrDepX then i.refraction_maxDepth = spRefrDep
+		if not spRefrSubX then i.refraction_subdivs = spRefrSub
+		if not spRefrGlosX then i.refraction_glossiness = spRefrGlos
+		if not spRefrIORX then i.refraction_ior = spRefrIOR
+		
+		if not spRefrX then i.texmap_refraction_multiplier = spRefr
+		i.texmap_refractionGlossiness_multiplier =100
+		
+		if i.texmap_bump != undefined then
+		(
+			if isProperty i.texmap_bump "coords" then i.texmap_bump.coords.blur = 0.75
+			if isProperty i.texmap_bump "filtering" then i.texmap_bump.filtering = 0
+		)
+		i.texmap_bump_on = true
+		if not spBumpX then i.texmap_bump_multiplier = spBump
+		
+		if i.texmap_opacity != undefined then
+		(
+			if isProperty i.texmap_opacity "coords" then i.texmap_opacity.coords.blur = 1.0
+			if isProperty i.texmap_opacity "filtering" then i.texmap_opacity.filtering = 2
+		)
+		i.texmap_opacity_on = true
+		if not spOpacX then i.texmap_opacity_multiplier = spOpac
+	) --if VRayMtl
+	
+) --fn VRayMatSetting i
+
+fn viewPoSetting =
+(
+	with redraw off
+	(
+	setCommandPanelTaskMode #create
+	
+	--#layout_4, layout_2v
+	viewport.setLayout #layout_2v
+	environmentMap = undefined
+	useEnvironmentMap = false
+	lightTintColor = color 255 255 255
+	ambientColor = color 0 0 0
+	
+	--1
+	viewport.activeViewportEx 1
+	viewport.setType #view_iso_user
+	displaySafeFrames = true
+	--#wireFrame, #smoothhighlights
+	--viewport.SetRenderLevel #smoothhighlights
+	viewport.SetShowEdgeFaces true
+	max wire smooth
+	viewport.EnableSolidBackgroundColorMode true
+	--ng = NitrousGraphicsManager.GetViewportSetting 0
+	ng = NitrousGraphicsManager.GetActiveViewportSetting()
+	ng.ShowSelectionBracketsEnabled = false
+	
+	--2
+	viewport.activeViewportEx 2
+	viewport.setType #view_top
+	displaySafeFrames = false
+	--viewport.SetRenderLevel #smoothhighlights
+	viewport.SetShowEdgeFaces true
+	max wire smooth
+	viewport.EnableSolidBackgroundColorMode true
+	ng = NitrousGraphicsManager.GetActiveViewportSetting()
+	ng.ShowSelectionBracketsEnabled = false
+	
+	viewport.setGridVisibility #all false
+	displayColor.wireFrame = #object
+	displayColor.shaded = #object
+	
+	--viewport.ZoomToBounds true [0,0,0] [500,500,0]
+	max zoomext sel all
+	)
+	
+	CompleteRedraw()
+	
+	renderSceneDialog.close()
+	renderers.current = Default_Scanline_Renderer()
+) --fn viewPoSetting
+
+fn exportToTxt str txtName:"info" txtDate:true =
+(
+	local f
+	
+	local dateArr = getLocalTime()
+	local a = substring (dateArr[1] as string) 3 2
+	local b = if dateArr[2] < 10 then
+		(
+			"0" + dateArr[2] as string
+		)
+		else
+		(
+			dateArr[2] as string
+		)
+	local c = if dateArr[4] < 10 then
+		(
+			"0" + dateArr[4] as string
+		)
+		else
+		(
+			dateArr[4] as string
+		)
+	if txtDate then
+	(
+		txtName = txtName + "_" + a + b + c
+	)
+	
+	--or try maxFileName and maxFilePath system global
+	if (substring (sysInfo.currentdir) 1 15) == "C:\\Program File" then
+	(
+		f = getSaveFileName caption:"Save to txt:" \
+		filename:("C:\\Users\\" + sysInfo.username + "\\Desktop\\" + txtName + ".txt") types:"text(*.txt)|*.txt|All|*.*|"
+	)
+	else
+	(
+		f = getSaveFileName caption:"Save to txt:" \
+		filename:(sysInfo.currentdir + "\\" + txtName + ".txt") types:"text(*.txt)|*.txt|All|*.*|"
+	)
+	
+	if f != undefined then
+	(
+		fs = createfile f
+		format str to:fs --DO NOT use "print" function as it will include "; use format instead
+		close fs
+		
+		messageBox ("Exported to: " + f)
+	)
+	else
+	(
+		messageBox "No text file exported"
+	)
+) --fn exportToTxt str txtName:"info"
+
+fn misClickPrevention str:"Proceed?" =
+(
+	queryBox str
+)
+
+--do not use
+fn forceRedraw =
+(
+	--progressEnd()
+	setCommandPanelTaskMode #modify
+	setCommandPanelTaskMode #create
+)
+
+--do not use
+fn getMatRecursiveSceneOld =
+(
+	local progressCnt = 0
+	UpdateSceneMaterialLib()
+	
+	progressStart "Counting scene materials..."
+	progressCnt = sceneMaterials.count
+	
+	--for i in sceneMaterials do getMatRecursive i
+	for i = 1 to progressCnt do
+	(
+		getMatRecursive sceneMaterials[i]
+		progressUpdate (100.0*i/progressCnt)
+	)
+	
+	progressEnd()
+	forceRedraw()
+)
