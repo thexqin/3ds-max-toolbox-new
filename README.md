@@ -26,11 +26,10 @@ A comprehensive collection of scripts designed to streamline common workflows in
     * **Material ID Check**: Scans your scene for all materials with an effects channel (Material ID) and flags any duplicated IDs, which can cause issues in post-production. This function now supports **Corona Materials**.
     * **Camera Info**: Provides a detailed report on all physical cameras in your scene, including lens focal length, exposure settings (f-number, shutter speed, ISO), and transform lock status. This function now supports **Corona Cameras**.
 * **Default Render Elements**: Automatically adds a comprehensive list of essential Corona render elements to your scene, including **Direct, Emission, Indirect, Reflect, Refract, ZDepth, WireColor, Material ID, Object ID**, and a pre-configured **CoronaAO** pass.
-* **Bitmap Gamma Fixer**: A specialized tool for **auditing and fixing bitmap textures**. It scans the scene for common issues like incorrect gamma settings, inverted outputs, or misplaced file paths. It provides a detailed report on each problem and allows you to apply bulk fixes to correct gamma and other output settings, ensuring proper texture rendering. This is crucial for ensuring textures like **normal maps** have a gamma of 1.0 while others have an `auto` gamma.
 
 ### ⚒️ Material & Proxy Tools
 
-* **Bitmap Gamma Fixer**: A tool that fixes gamma settings for all selected materials. It automatically sets the gamma for **Normal and Roughness maps** to 1.0 and for **Diffuse and Reflection maps** to `auto`, ensuring your PBR textures render correctly without manual adjustments.
+* **Bitmap Gamma Fixer**: A specialized tool for **auditing and fixing bitmap textures**. It scans the scene for common issues like incorrect gamma settings, inverted outputs, or misplaced file paths. It provides a detailed report on each problem and allows you to apply bulk fixes to correct gamma and other output settings, ensuring proper texture rendering. This is crucial for ensuring textures like **normal maps** have a gamma of 1.0 while others have an `auto` gamma.
 * **Reference Plane Creator**: A quick utility to create a reference plane with a specified size. It automatically assigns a **Standard Material** and a bitmap texture to the plane, configures the UVW map, and makes the plane semi-transparent for easy alignment. It can also bring the material into the active Material Editor slot.
 
 ### 🔎 Utilities & Maintenance
@@ -57,7 +56,7 @@ A visual guide to the toolbox's user interface and its various functions.
 ![toolboxnew_map_browser.png](toolboxnew_map_browser.png)
 ![toolboxnew_map_browser_search.png](toolboxnew_map_browser_search.png)
 
-* **Bitmap Gamma Checker**: A screenshot of the Gamma Checker UI, showing all to search for incorrect gamma setups and fix them.
+* **Bitmap Gamma Checker**: A screenshot of the Gamma Checker UI, showing how to search for incorrect gamma setups and fix them.
 
 ![toolboxnew__gamma_checker.png](toolboxnew_gamma_checker.png)
 
@@ -80,6 +79,6 @@ A visual guide to the toolbox's user interface and its various functions.
 
 * **V-Ray and Corona Compatibility**: This toolbox is designed to be compatible with both **V-Ray** and **Corona**. While some tools are renderer-specific, the core scene and asset management functions are universal.
 * **Undos**: All operations are undoable via the standard **Ctrl+Z** hotkey, so feel free to experiment without worry.
-* **File Paths**: Some internal paths are hardcoded for `ms*` files. Ensure all files (`.mse`) from the toolbox are in the same folder as the main `.mcr` file.
+* **File Paths**: Some internal paths are hardcoded for `ms*` files. Ensure all files (`.ms .mse`) from the toolbox are in the same folder as the main `.mcr` file.
 
 Happy rendering!
