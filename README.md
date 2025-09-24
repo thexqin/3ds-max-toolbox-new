@@ -77,7 +77,7 @@ A visual guide to the toolbox's user interface and its various functions.
 
 ## 💡 Notes
 
-* **V-Ray and Corona Compatibility**: This toolbox is designed to be compatible with both **V-Ray** and **Corona**. While some tools are renderer-specific, the core scene and asset management functions are universal.
+* **V-Ray and Corona Compatibility**: This toolbox is designed to be compatible with both **V-Ray** and **Corona**. While some tools are renderer-specific, the core scene and asset management functions are universal. All tools work perfectly across 3ds Max 2014 through 2025.
 * **Undos**: All operations are undoable via the standard **Ctrl+Z** hotkey, so feel free to experiment without worry.
 * **File Paths**: Some internal paths are hardcoded for `ms*` files. Ensure all files (`.ms .mse`) from the toolbox are in the same folder as the main `.mcr` file.
 
