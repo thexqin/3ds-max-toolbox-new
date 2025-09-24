@@ -1,6 +1,6 @@
 # QX Toolbox (New 2025) for 3ds Max 🎨
 
-A comprehensive collection of scripts designed to streamline common workflows in 3ds Max, developed between 2023 and 2025. This toolbox automates tedious tasks, from scene cleanup and asset management to V-Ray render optimization, allowing artists to focus on creativity and production.
+A comprehensive collection of scripts designed to streamline common workflows in 3ds Max, developed between 2023 and 2025. This toolbox automates tedious tasks, from scene cleanup and asset management to Corona render optimization, allowing artists to focus on creativity and production.
 
 Check out [The original QX Toolbox from 2014](https://github.com/thexqin/3ds-max-toolbox)
 
