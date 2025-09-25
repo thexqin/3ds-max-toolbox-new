@@ -1218,55 +1218,6 @@ on btn23 pressed do
 	)
 )
 
-/*
-on btn23 pressed do
-(
-	local tmp = for i in selection collect i.material
-	local mtl = makeUniqueArray tmp
-	
-	for i in mtl do
-	(
-		local normalM = try(getSubTexmap i.texmap_bump 1) catch()
-		if normalM != undefined and normalM.fileName != "" then
-		(
-		normalM.bitmap = openBitmap normalM.fileName gamma:1.0
-		)
-
-		local diffuseM = try(i.texmap_diffuse) catch()
-		if diffuseM != undefined and diffuseM.fileName != "" then
-		(
-		diffuseM.bitmap = openBitmap diffuseM.fileName gamma:#auto
-		)
-		
-		local reflectionM = try(i.texmap_reflection) catch()
-		if reflectionM != undefined and reflectionM.fileName != "" then
-		(
-		reflectionM.bitmap = openBitmap reflectionM.fileName gamma:#auto
-		)
-	)
-)
-*/
-
-/*
-on btn24 pressed do
-(
-	local tmp = for i in selection collect i.material
-	local mtl = makeUniqueArray tmp
-	
-	for i in mtl do
-	(
-		local diffuseM = try(i.texmap_diffuse) catch()
-		if diffuseM != undefined then
-		(
-			--diffuseM.output.output_amount = 1.0
-			--diffuseM.output.RGB_Level = 1.0
-			--diffuseM.output.RGB_Offset = 0.0
-			--diffuseM.output.Bump_Amount = 1.0
-		)
-	)
-)
-*/
-
 ) --F
 
 --G
@@ -1404,24 +1355,6 @@ on btn20 pressed do
 (
 	shelllaunch "msedge.exe" "https://help.autodesk.com/view/MAXDEV/2022/ENU/?guid=GUID-F039181A-C072-4469-A329-AE60FF7535E7"
 ) --btn20 help
-
---btn21 email
-/*
-on btn21 pressed do
-(
-	local subjectString = "Re: subject"
-	local bodyString = "This is a test body\n\nRegards,"
-	local addressString = "someone@microsoft.com"
-
-	subjectString = substituteString subjectString " " "%20"
-	bodyString = substituteString bodyString " " "%20"
-	bodyString = substituteString bodyString "\n" "%0D"
-
-	local emailString = "/c ipm.note /m " + addressString + "?subject=" + subjectString +"&body=" + bodyString
-
-	ShellLaunch "outlook.exe" emailString
-) --btn21 email
-*/
 
 on btn21 pressed do
 (
